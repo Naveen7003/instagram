@@ -52,7 +52,21 @@
             <div class="flex gap-3 mt-2">
               <i data-id="<%= post._id %>"
                 class="like <%= post.likes.indexOf(user.id) === -1 ? 'ri-heart-3-line' : 'text-red-500 ri-heart-3-fill' %>"></i>
-              <i class="ri-chat-3-line"></i>
+              <i data-id="<%=post._id%>" class="comment ri-chat-3-line"></i> 
+              <div data-id="<%=post._id%>" class="comment-box hidden w-[100vw]  mt-10 -ml-20 px-4 h-48 bg-zinc-900 overflow-y-auto">
+                <input data-id="<%=post._id%>" type="text" class="comment-input mt-2 h-5 w-[75vw] border-md border-gray-300 text-sm text-zinc-900" >
+                <button data-id="<%=post._id%>" class="comment-submit bg-transparent -mt-56 ml-3 font-semibold text-[5vw] text-blue-500 cursor-pointer">Post</button>
+                <% post.comments.forEach(function(comment){ %>
+                  <div class="flex gap-2 mt-6">
+                      <div class="w-[6vw] h-[6vw] bg-sky-100 overflow-hidden rounded-full">
+                        <img class="w-full h-full object-cover" src="/images/uploads/<%= post.user.profilepicture %>" alt="">
+                      </div>
+                      <h4 class="text-sm"><%= post.user.username %></h4>
+                    <h1 class="h1 text-sm"><%=comment.comments %></h1>
+                  </div>
+               <% }) %>
+                
+            </div>                       
               <i class="ri-share-circle-line"></i>
             </div>
             <i data-id="<%= post._id %>" class="save <%= user.saved.indexOf(post._id) === -1 ? 'ri-bookmark-line' : 'ri-bookmark-fill text-white' %>"></i>
@@ -77,9 +91,58 @@
     integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
-
     
+   var commentBox = document.querySelector(".comment-box");
+   document.querySelector(".posts").addEventListener("click", function(ev) {
+  if (ev.target.classList.contains("comment")) {
+    var postId = ev.target.dataset.id;
+    var commentBox = document.querySelector(`.comment-box[data-id="${postId}"]`);
+    if (commentBox) {
+      commentBox.classList.toggle("hidden");
+      if (!commentBox.classList.contains("hidden")) {
+        commentBox.querySelector('.comment-input').focus();
+      }
+    } else {
+      console.error('Comment box not found for post ID:', postId);
+    }
+  } else if (ev.target.classList.contains("comment-submit")) {
+    var postId = ev.target.dataset.id;
+    comment(postId);
+  }
+});
 
+function comment(post_id) {
+  var commentInput = document.querySelector(`.comment-box[data-id="${post_id}"] .comment-input`);
+  var comment = commentInput.value;
+
+  axios.post(`/comment/${post_id}`, { comment: comment })
+    .then(function(res) {
+      var newCommentHTML =`<div class="flex gap-2 mt-6">
+        <div class="w-[6vw] h-[6vw] bg-sky-100 overflow-hidden rounded-full">
+          <img class="w-full h-full object-cover" src="/images/uploads/<%= user.profilepicture %>" alt="">
+        </div>
+        <h4 class="text-sm"><%= user.username %></h4>
+        <h1 class="h1 text-sm">${comment}</h1>
+      </div>`;
+      
+      var commentBox = document.querySelector(`.comment-box[data-id="${post_id}"]`);
+      if (commentBox) {
+        commentBox.insertAdjacentHTML('beforeend', newCommentHTML);
+      } else {
+        console.error('Comment box not found for post ID:', post_id);
+      }
+    })
+    .catch(function(error) {
+      console.error('Error posting comment:', error);
+    });
+
+  if (commentInput) {
+    commentInput.value = "";
+  } else {
+    console.error('Comment input not found for post ID:', post_id);
+  }
+}
+  
     function handleLike() {
       document.querySelector(".posts")
         .addEventListener("click", function (ev) {

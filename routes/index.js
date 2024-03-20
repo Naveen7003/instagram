@@ -6,11 +6,16 @@ const storyModel = require("./story");
 const passport = require("passport");
 const localStrategy = require("passport-local");
 const upload = require("./multer");
+const commentModel = require('./comment')
 const utils = require("../utils/utils")
 
 passport.use(new localStrategy(userModel.authenticate()));
 
 router.get("/", function (req, res) {
+  res.render("index", { footer: false });
+});
+
+router.get("/register", function (req, res) {
   res.render("index", { footer: false });
 });
 
@@ -31,6 +36,31 @@ router.get("/profile/:user", isLoggedIn, async function (req, res) {
 
   res.render("userprofile", { footer: true, userprofile, user });
 });
+
+router.post('/comment/:id', async (req, res) => {
+  try {
+      const postId = req.params.id;
+      const user = req.session.passport.user; // Assuming req.session.passport.user contains the user ID
+      
+      const post = await postModel.findById(postId);
+    
+
+      const comment = await commentModel.create({
+          user: user._id,
+          comments: req.body.comment,
+          post: post._id
+      });
+
+      post.comments.push(comment._id); // Pushing the comment object, not just the user ID
+      await post.save();
+
+      res.status(200).send({ message: 'Comment added successfully' });
+  } catch (error) {
+      console.error('Error adding comment:', error);
+      res.status(500).send({ error: 'An error occurred while adding the comment' });
+  }
+});
+
 
 router.get("/follow/:id",isLoggedIn, async (req, res)=>{
   const followkarnewala = await userModel.findOne({username: req.session.passport.user})
@@ -57,6 +87,10 @@ router.get("/feed", isLoggedIn, async function (req, res) {
   const posts = await postModel
   .find()
   .populate('user')
+  .populate('comments')
+
+  console.log(posts)
+  
 
   const stories = await storyModel.find({user: {$ne: user._id}})
   .populate('user');
