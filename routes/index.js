@@ -5,9 +5,11 @@ const postModel = require("./post");
 const storyModel = require("./story");
 const passport = require("passport");
 const localStrategy = require("passport-local");
-const upload = require("./multer");
+const {upload, uploadFileToGridFS} = require("./multer");
 const commentModel = require('./comment')
 const utils = require("../utils/utils")
+const fs = require('fs');
+const path = require('path');
 
 passport.use(new localStrategy(userModel.authenticate()));
 
@@ -89,7 +91,9 @@ router.get("/feed", isLoggedIn, async function (req, res) {
   .populate('user')
   .populate('comments')
 
-  console.log(posts)
+  posts.forEach(post => {
+    post.mediaType = post.image.endsWith('.mp4') ? 'video' : 'image';
+  });
   
 
   const stories = await storyModel.find({user: {$ne: user._id}})
@@ -108,6 +112,10 @@ router.get("/profile", isLoggedIn, async function (req, res) {
   const user = await userModel
   .findOne({username: req.session.passport.user})
   .populate('posts')
+
+  user.posts.forEach(post => {
+    post.mediaType = post.image.endsWith('.mp4') ? 'video' : 'image';
+  });
 
   res.render("profile", { footer: true, user: user });
 });
@@ -183,27 +191,35 @@ router.get("/save/:postid", isLoggedIn, async function (req, res) {
 
 
 router.post("/upload", isLoggedIn, upload.single('image'), async function (req, res) {
-  const user = await userModel.findOne({username: req.session.passport.user});
-  if(req.body.type === "post"){
-    const post = await postModel.create({
-      caption: req.body.caption,
-      image: req.file.filename,
-      user: user._id
-    })
-    user.posts.push(post._id);
-  }
-  else{
-    const story = await storyModel.create({
-      image: req.file.filename,
-      user: user._id
-    })
-    user.stories.push(story._id);
-  }
+  try {
+      const user = await userModel.findOne({ username: req.session.passport.user });
 
-  await user.save();
-  res.redirect("/feed");
+      const filePath = path.join('./public/images/uploads', req.file.filename);
+      
+      await uploadFileToGridFS(req.file.filename, filePath);
+
+      if (req.body.type === "post") {
+          const post = await postModel.create({
+              caption: req.body.caption,
+              image: req.file.filename,
+              user: user._id
+          });
+          user.posts.push(post._id);
+      } else {
+          const story = await storyModel.create({
+              image: req.file.filename,
+              user: user._id
+          });
+          user.stories.push(story._id);
+      }
+
+      await user.save();
+      res.redirect("/feed");
+  } catch (error) {
+      console.error('Error uploading file:', error);
+      res.status(500).send({ error: 'An error occurred while uploading the file' });
+  }
 });
-
 router.post("/register", function (req, res) {
   var userDets = new userModel({
     username: req.body.username,
@@ -266,4 +282,6 @@ router.get("/story/:id/:number", isLoggedIn, async function (req, res) {
   }
 
 });
+
+
 module.exports = router;

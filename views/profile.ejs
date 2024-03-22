@@ -39,7 +39,13 @@
         <% if(user.posts.length > 0){ %>
           <% user.posts.forEach(function(post){ %>
             <div class="post w-[32.5%] h-32 bg-sky-100 overflow-hidden">
-              <img class="w-full h-full object-cover" src="/images/uploads/<%= post.image %>" alt="">
+              <% if(post.mediaType === 'video') { %>
+                <video data-id="<%= post._id %>" class="postvideo w-full h-full object-cover" style="max-width: 100%;" loop >
+                  <source src="/images/uploads/<%= post.image %>" type="video/mp4">
+                </video>
+              <% } else { %>
+                <img data-id="<%= post._id %>" class="postimg w-full h-full object-cover" src="/images/uploads/<%= post.image %>" alt="">
+              <% } %>
             </div>
           <% }) %>
         <% } else { %>
@@ -47,4 +53,5 @@
         <% } %>
       </div>
   </div>
+  
 <% include ./partials/footer.ejs %>

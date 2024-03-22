@@ -46,7 +46,14 @@
             <h6 class="text-xs opacity-30"><%= dater(new Date(post.date)) %></h6>
           </div>
           <div class="w-full h-96 mt-4 overflow-hidden">
-            <img data-id="<%= post._id %>" class="postimg w-full h-full object-cover" src="/images/uploads/<%= post.image %>" alt="">
+            <% if (post.mediaType === 'video') { %>
+              <video data-id="<%= post._id %>" class="postvideo w-full h-full object-cover" style="max-width: 100%;" autoplay muted loop>
+                <source src="/images/uploads/<%= post.image %>" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <% } else { %>
+              <img data-id="<%= post._id %>" class="postimg w-full h-full object-cover" src="/images/uploads/<%= post.image %>" alt="">
+            <% } %>
           </div>
           <div class="options w-full px-4 flex justify-between items-center text-[1.4rem]">
             <div class="flex gap-3 mt-2">
