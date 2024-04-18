@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Chat Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 600px;
+            margin: 5px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .chat-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            height: 500px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .message {
+            margin: 10px;
+            padding: 10px;
+            
+            border-radius: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            background-color: #e9e9e9;
+        }
+
+        .message.sent {
+            background-color: #007bff;
+            color: #fff;
+            align-self: flex-end;
+        }
+
+        .message.received {
+            background-color: #f1f1f1;
+        }
+
+        .message input[type="text"] {
+            width: calc(100% - 70px);
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .message button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 100%;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <img src="/images/uploads/<%= username.profilepicture %>" alt="Profile Picture"> 
+        <div class="text">
+            <h3><%= username.username %></h3>
+            <h4 class="text-xs opacity-30 leading-none"><%= username.name %></h4>
+        </div>
+    </div>
+    <div class="chat-messages">
+        
+        
+        
+    </div>
+    <div class="message">
+        <input type="text" class="typemessage" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        var socket = io();
+
+        const sender = `<%= user.username %>`;
+        const receiver = `<%= username.username %>`;
+
+        socket.emit("join-user", sender);
+
+        function outgoingMessage(message){
+            const messages = `<div class="ms-auto p-2 rounded-md m-1 bg-light" style="width: fit-content;background-color: #007bff;">${message}</div>`
+            document.querySelector(".chat-messages").innerHTML += messages;
+        }
+
+        function incomingMessage(message){
+            if(!message)
+                return;
+            const messages = `<div class="p-2 rounded-md m-1 " style="width: fit-content;background-color: #007bff;">${message}</div>`;
+            document.querySelector(".chat-messages").innerHTML += messages;
+        }
+
+        function sendMessage(){
+            const message = document.querySelector(".typemessage").value;
+            if(!message)
+                return
+            outgoingMessage(message)
+            document.querySelector(".typemessage").value = "";
+
+            socket.emit("send-private-message",{message, sender, receiver})
+        }
+
+        socket.on("receive-private-message", message =>{
+          
+            incomingMessage(message.message)
+        })
+
+        socket.emit("fetch-conversation",{
+            sender, receiver
+        })
+
+        socket.on('send-conversation', allMessages=>{
+            console.log(allMessages)
+            document.querySelector(".chat-messages").innerHTML = "";
+           allMessages.forEach(message => {
+            if(message.sender === sender && message.receiver === receiver ||
+                message.sender === receiver && message.receiver === sender){
+                    if(message.sender === sender){
+                        outgoingMessage(message.message)
+                    }else{
+                        incomingMessage(message.message)
+                    }
+                }
+            
+           });
+        })
+        
+    </script>
+</body>
+</html>

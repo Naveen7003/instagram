@@ -36,6 +36,10 @@ router.get("/profile/:user", isLoggedIn, async function (req, res) {
     .findOne({ username: req.params.user })
     .populate("posts");
 
+    userprofile.posts.forEach(post => {
+      post.mediaType = post.image.endsWith('.mp4') ? 'video' : 'image';
+    });
+
   res.render("userprofile", { footer: true, userprofile, user });
 });
 
@@ -62,7 +66,6 @@ router.post('/comment/:id', async (req, res) => {
       res.status(500).send({ error: 'An error occurred while adding the comment' });
   }
 });
-
 
 router.get("/follow/:id",isLoggedIn, async (req, res)=>{
   const followkarnewala = await userModel.findOne({username: req.session.passport.user})
@@ -138,13 +141,10 @@ router.get('/username/:username', isLoggedIn, async function(req, res ){
   res.json(users);
 })
 
-
 router.get("/edit", isLoggedIn, async function (req, res) {
   const user = await userModel.findOne({username: req.session.passport.user});
   res.render("edit", { footer: true, user }); 
 });
-
-
 
 router.post("/update", isLoggedIn, async function (req, res) {
   const user = await userModel.findOneAndUpdate(
@@ -189,7 +189,6 @@ router.get("/save/:postid", isLoggedIn, async function (req, res) {
   res.json(user);
 });
 
-
 router.post("/upload", isLoggedIn, upload.single('image'), async function (req, res) {
   try {
       const user = await userModel.findOne({ username: req.session.passport.user });
@@ -220,6 +219,7 @@ router.post("/upload", isLoggedIn, upload.single('image'), async function (req, 
       res.status(500).send({ error: 'An error occurred while uploading the file' });
   }
 });
+
 router.post("/register", function (req, res) {
   var userDets = new userModel({
     username: req.body.username,
@@ -281,6 +281,23 @@ router.get("/story/:id/:number", isLoggedIn, async function (req, res) {
     res.redirect("/feed");
   }
 
+});
+
+router.get("/chat",isLoggedIn, async function (req, res) {
+  const user = await userModel.findOne({username: req.session.passport.user}).populate('followers');
+  const followers = user.followers
+  res.render("chat", { footer: true, user, followers});
+});
+
+router.get("/chatpage",isLoggedIn, async function (req, res) {
+  const user = await userModel.findOne({username: req.session.passport.user})
+  res.render("chatpage", { footer: true, user});
+});
+
+router.get("/chatpage/:username", isLoggedIn, async function(req, res){
+  const user = await userModel.findOne({username: req.session.passport.user})
+  const username = await userModel.findOne({username: req.params.username});
+  res.render("chatpage",{footer:true, username, user} )
 });
 
 

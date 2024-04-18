@@ -42,8 +42,14 @@
     <div class="posts w-full flex gap-1 py-2 mt-5 flex-wrap">
       <% if(userprofile.posts.length>0){ %>
         <% userprofile.posts.reverse().forEach(function(post){ %>
-          <div class="post w-[32.5%] h-32 bg-sky-100">
-            <img class="w-full h-full object-cover" src="/images/uploads/<%= post.image %>" alt="">
+          <div class="post w-[32.5%] h-32 bg-sky-100 overflow-hidden">
+            <% if(post.mediaType === 'video') { %>
+              <video data-id="<%= post._id %>" class="postvideo w-full h-full object-cover" style="max-width: 100%;" loop >
+                <source src="/images/uploads/<%= post.image %>" type="video/mp4">
+              </video>
+            <% } else { %>
+              <img data-id="<%= post._id %>" class="postimg w-full h-full object-cover" src="/images/uploads/<%= post.image %>" alt="">
+            <% } %>
           </div>
         <% }) %>
       <% } else { %>

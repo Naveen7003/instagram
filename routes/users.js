@@ -4,7 +4,7 @@ const {mongo} = require('mongoose');
 
 mongoose.connect(`mongodb://127.0.0.1:27017/instacloney`);
 
-const userSchema = mongoose.Schema({
+const userSchema = new mongoose.Schema({
   username: String,
   name: String,
   stories: [{
@@ -38,6 +38,9 @@ const userSchema = mongoose.Schema({
   bio: String,
   password: String,
   email: String,
+  socketId: {
+    type: String,
+  },
   saved: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "post" 
