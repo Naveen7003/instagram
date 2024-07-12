@@ -1,3 +1,4 @@
 node_modules
 public/images/uploads
 package-lock.json
+.env

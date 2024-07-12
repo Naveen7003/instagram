@@ -1,4 +1,5 @@
 var express = require("express");
+require("dotenv").config({path: "./.env"});
 var router = express.Router();
 const userModel = require("./users");
 const postModel = require("./post");
@@ -10,6 +11,7 @@ const commentModel = require('./comment')
 const utils = require("../utils/utils")
 const fs = require('fs');
 const path = require('path');
+require("./dbconfig").dbconnection();
 
 passport.use(new localStrategy(userModel.authenticate()));
 

@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const plm = require("passport-local-mongoose");
-const {mongo} = require('mongoose');
 
-mongoose.connect(`mongodb://127.0.0.1:27017/instacloney`);
 
 const userSchema = new mongoose.Schema({
   username: String,
