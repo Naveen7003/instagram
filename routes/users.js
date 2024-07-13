@@ -3,7 +3,12 @@ const plm = require("passport-local-mongoose");
 
 
 const userSchema = new mongoose.Schema({
-  username: String,
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
   name: String,
   stories: [{
     type: mongoose.Schema.Types.ObjectId,
